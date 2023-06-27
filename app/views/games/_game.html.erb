@@ -1,0 +1,67 @@
+<%= turbo_frame_tag dom_id(game) do %>
+  <p id="notice"><%= notice %></p>
+  <% if game.state == Game::FINISHED %>
+    <p>
+      <strong>Winning team:</strong>
+      <%= game.winning_team %>
+    </p>
+  <% elsif game.state == Game::ACTIVE %>
+    <div>Move: <%= game.move_role %> <%= game.move_team %></div>
+    <div><%= game.participants.where(team: game.move_team, role: game.move_role).map(&:name).join(", ") %></div>
+    <hr>
+    <% if game.move_role == "spymaster" %>
+      <div class="flexy">
+        <div>Hint: <%= game.last_hint_text %></div>
+        <div>Number: <%= game.last_hint_number %></div>
+      </div>
+    <% end %>
+    <div class="grid-container">
+      <% game.cards.each do |card| %>
+        <div class="grid-item">
+          <% if card.selected %>
+            <div class="selected opp-<%= card.colour%> <%= card.colour if card.selected %>"><%= card.word %></div>
+          <% else %>
+            <%= button_to card.word, {controller: "games", action: "spymaster_move", game_id: game.id, card_id: card.id, method: :post}, class: "opp-#{card.colour}" %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <%= form_for game, url: game_operative_move_path(game) do |form| %>
+      <div class="flexy">
+        <div class="field">
+          <%= form.label :last_hint_text %>
+          <%= form.text_field :last_hint_text, value: nil %>
+        </div>
+
+        <div class="field">
+          <%= form.label :last_hint_number %>
+          <%= form.number_field :last_hint_number, value: nil %>
+        </div>
+
+        <div class="actions">
+          <%= form.submit "Add Hint" %>
+        </div>
+      </div>
+    <% end %>
+  <% elsif game.state == Game::PARTICIPANTS_FOUND %>
+    <%= button_to 'Start Game', {controller: "games", action: "start", game_id: game.id, method: :post}  %>
+  <% end %>
+  <table style="width: 100%">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Team</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% game.participants.each do |participant| %>
+        <tr>
+          <td><%= participant.name %></td>
+          <td><%= participant.team %></td>
+          <td><%= participant.role %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
