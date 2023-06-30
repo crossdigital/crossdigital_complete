@@ -42,7 +42,7 @@ class GamesController < ApplicationController
     else
       @card.update(selected: true)
       if @card.colour == @participant.team
-        @game.update(last_hint_number: @game.last_hint_number - 1)
+        @game.update(last_hint_number: (@game.last_hint_number || 1) - 1)
         @game.set_state
         if @game.last_hint_number <= 0
           @game.next_move
